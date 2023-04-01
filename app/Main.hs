@@ -7,7 +7,7 @@ import System.Clock (TimeSpec(TimeSpec), getTime, Clock(Monotonic), diffTimeSpec
 import System.Console.CmdArgs
 
 
-data Config = Config
+data BeeSolver = BeeSolver 
   { dict :: String
   , wordsoutput :: Bool
   , required :: String
@@ -15,11 +15,11 @@ data Config = Config
   } deriving (Show, Data, Typeable)
 
 
-getConfig :: IO Config
-getConfig = checkValid <$> cmdArgsRun mode
+getBeeSolver :: IO BeeSolver
+getBeeSolver = checkValid <$> cmdArgsRun mode
   where 
-    mode = cmdArgsMode config
-    config = Config
+    mode = cmdArgsMode beeSolver
+    beeSolver = BeeSolver
       { dict        = "american-english-large" &= help "Path to custom dictionary"
       , wordsoutput = True &= help "Output matching words"
       , required    = def &= typ "REQUIRED" &= argPos 0
@@ -36,18 +36,18 @@ timeNow = getTime Monotonic
 
 main :: IO ()
 main = do
-  config <- getConfig
+  beeSolver <- getBeeSolver
   dictLoadStart <- timeNow
-  d <- makeDict (dict config)
+  d <- makeDict (dict beeSolver)
   putStrLn "🐝"
   putStrLn "Hello and welcome to Spelling Bee Solver"
   putStrLn "🐝🐝"
   putStrLn "🐝🐝🐝"
-  putStrLn $ "Required Letter:  " ++ (required config)
-  putStrLn $ "Other Letters:    " ++ (others config)
-  putStrLn $ "Dictionary:       " ++ (dict config)
+  putStrLn $ "Required Letter:  " ++ (required beeSolver)
+  putStrLn $ "Other Letters:    " ++ (others beeSolver)
+  putStrLn $ "Dictionary:       " ++ (dict beeSolver)
   putStrLn $ "Dictionary words: " ++ (show (dictSize d))
-  let puzzle = makePuzzle (head $ required config) (others config)
+  let puzzle = makePuzzle (head $ required beeSolver) (others beeSolver)
   putStrLn "Solving now"
   startSolve <- getTime Monotonic
   let results = solvePuzzle d puzzle
@@ -55,7 +55,7 @@ main = do
   putStrLn "🐝🐝🐝🐝🐝"
   putStrLn "Solved!"
   putStrLn ""
-  dumpOutput config results
+  dumpOutput beeSolver results
   dumpTimings dictLoadStart startSolve
 
 dumpTimings :: TimeSpec -> TimeSpec -> IO ()
@@ -67,11 +67,11 @@ dumpTimings dictLoadStart startSolve = do
     toMsString timespec = show (toMs timespec) ++ " ms"
     toMs (TimeSpec sec nanos) = sec * 1000 + (nanos `div` 1000000)
 
-dumpOutput :: Config -> [Result] -> IO ()
-dumpOutput config results = do
+dumpOutput :: BeeSolver -> [Result] -> IO ()
+dumpOutput beeSolver results = do
   putStrLn $ "Matching words " ++ (show $ length results)
   putStrLn $ "Pangrams: " ++ (show $ length $ filter isPangram results)
-  if wordsoutput config then print $ map translate results
+  if wordsoutput beeSolver then print $ map translate results
   else return ()
     where
       translate (Valid word True) = word ++ " 🍳"
