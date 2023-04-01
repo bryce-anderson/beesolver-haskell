@@ -3,6 +3,7 @@
 module Main (main) where
 
 import Lib
+import System.Clock (TimeSpec(TimeSpec), getTime, Clock(Monotonic), diffTimeSpec)
 import System.Console.CmdArgs
 
 
@@ -30,9 +31,13 @@ getConfig = checkValid <$> cmdArgsRun mode
         where
         invalid = length (required m) /= 1 || length (others m) /= 6
 
+timeNow :: IO TimeSpec
+timeNow = getTime Monotonic
+
 main :: IO ()
 main = do
   config <- getConfig
+  dictLoadStart <- timeNow
   d <- makeDict (dict config)
   putStrLn "🐝"
   putStrLn "Hello and welcome to Spelling Bee Solver"
@@ -42,14 +47,30 @@ main = do
   putStrLn $ "Other Letters:    " ++ (others config)
   putStrLn $ "Dictionary:       " ++ (dict config)
   putStrLn $ "Dictionary words: " ++ (show (dictSize d))
-  putStrLn "Solving now"
   let puzzle = makePuzzle (head $ required config) (others config)
+  putStrLn "Solving now"
+  startSolve <- getTime Monotonic
   let results = solvePuzzle d puzzle
   putStrLn "🐝🐝🐝🐝"
   putStrLn "🐝🐝🐝🐝🐝"
   putStrLn "Solved!"
   putStrLn ""
+  dumpOutput config results
+  dumpTimings dictLoadStart startSolve
+
+dumpTimings :: TimeSpec -> TimeSpec -> IO ()
+dumpTimings dictLoadStart startSolve = do
+  solveEnd <- timeNow
+  putStrLn $ "  Time loading dictionary: " ++ toMsString (startSolve `diffTimeSpec` dictLoadStart)
+  putStrLn $ "  Time solving: " ++ toMsString (solveEnd `diffTimeSpec` startSolve)
+  where
+    toMsString timespec = show (toMs timespec) ++ " ms"
+    toMs (TimeSpec sec nanos) = sec * 1000 + (nanos `div` 1000000)
+
+dumpOutput :: Config -> [Result] -> IO ()
+dumpOutput config results = do
   putStrLn $ "Matching words " ++ (show $ length results)
+  putStrLn $ "Pangrams: " ++ (show $ length $ filter isPangram results)
   if wordsoutput config then print $ map translate results
   else return ()
     where

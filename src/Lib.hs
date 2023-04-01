@@ -16,7 +16,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Normalize as N
 import Data.Text.ICU.Char
 
-
 data Dictionary = Dictionary String (Set String)
   deriving (Show)
 
@@ -33,20 +32,6 @@ data Result =
 
 data Puzzle = Puzzle Char (Set Char)
   deriving (Show)
-
-solvePuzzle :: Dictionary -> Puzzle -> [Result]
-solvePuzzle dict puzzle = filter isValid $ (resultFor puzzle) `map` candidates
-  where
-    candidates = elems $ dictWords dict
-  
-
-makePuzzle :: Char -> String -> Puzzle
-makePuzzle c cs =
-  if valid then Puzzle c (fromList cs)
-  else error "Puzzle input is invalid"
-  where
-    set = fromList cs
-    valid = (length cs) == (size set) && c `notElem` cs
 
 resultFor :: Puzzle -> String -> Result
 resultFor (Puzzle c req) cs =
@@ -65,17 +50,29 @@ isPangram :: Result -> Bool
 isPangram (Valid _ True) = True
 isPangram _ = False
 
+solvePuzzle :: Dictionary -> Puzzle -> [Result]
+solvePuzzle dict puzzle = filter isValid $ (resultFor puzzle) `map` candidates
+  where
+    candidates = elems $ dictWords dict
+  
+
+makePuzzle :: Char -> String -> Puzzle
+makePuzzle c cs =
+  if valid then Puzzle c (fromList cs)
+  else error "Puzzle input is invalid"
+  where
+    set = fromList cs
+    valid = (length cs) == (size set) && c `notElem` cs
 
 makeDict :: String -> IO Dictionary
 makeDict fname = toDict <$> readFile fname
   where
     toDict contents = Dictionary fname (fromList $ norm $ lines contents)
-
--- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
-norm :: [String] -> [String]
-norm ws = map normalized filtered
-  where
-    filtered = filter ltthree $ map T.pack ws
-    normalized t = T.unpack $ T.toLower $ T.filter (not . property Diacritic) $ N.normalize N.NFKD t
-    ltthree s = T.length s > 3
+    -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
+    norm :: [String] -> [String]
+    norm ws = map normalized filtered
+      where
+      filtered = filter ltthree $ map T.pack ws
+      normalized t = T.unpack $ T.toLower $ T.filter (not . property Diacritic) $ N.normalize N.NFKD t
+      ltthree s = T.length s > 3
 
