@@ -34,43 +34,26 @@ main :: IO ()
 main = do
   config <- getConfig
   d <- makeDict (dict config)
-  helloMessage config d
+  putStrLn "🐝"
+  putStrLn "Hello and welcome to Spelling Bee Solver"
+  putStrLn "🐝🐝"
+  putStrLn "🐝🐝🐝"
+  putStrLn $ "Required Letter:  " ++ (required config)
+  putStrLn $ "Other Letters:    " ++ (others config)
+  putStrLn $ "Dictionary:       " ++ (dict config)
+  putStrLn $ "Dictionary words: " ++ (show (dictSize d))
+  putStrLn "Solving now"
   let puzzle = makePuzzle (head $ required config) (others config)
   let results = solvePuzzle d puzzle
-  print puzzle
-  showResults config results
-
-showResults :: Config -> [Result] -> IO ()
-showResults cfg results = do
-  putStrLn $ "Matching words " ++ (show $ length results) 
-  if wordsoutput cfg then print $ map translate results
+  putStrLn "🐝🐝🐝🐝"
+  putStrLn "🐝🐝🐝🐝🐝"
+  putStrLn "Solved!"
+  putStrLn ""
+  putStrLn $ "Matching words " ++ (show $ length results)
+  if wordsoutput config then print $ map translate results
   else return ()
     where
       translate (Valid word True) = word ++ " 🍳"
       translate (Valid word False) = word
       translate (Invalid _ ) = error "shouldn't get here"
-
-helloMessage :: Config -> Dictionary -> IO ()
-helloMessage config dictionary = do
-  putStrLn "🐝"
-  putStrLn "Hello and welcome to Spelling Bee Solver"
-  putStrLn "🐝🐝"
-
-  putStrLn "🐝🐝🐝"
-  putStrLn $ "Required Letter:  " ++ (required config)
-  putStrLn $ "Other Letters:    " ++ (others config)
-  putStrLn $ "Dictionary:       " ++ (dict config)
-  putStrLn $ "Dictionary words: " ++ (show (dictSize dictionary))
-  putStrLn "Solving now"
-  putStrLn "🐝🐝🐝🐝"
-
-  -- solver := Solver{dictionary, puzzle}
-  -- start = time.Now()
-  -- solutions := solver.Solve()
-  -- elapsedSolve := time.Since(start)
-
-  putStrLn "🐝🐝🐝🐝🐝"
-  putStrLn "Solved!"
-  putStrLn ""
-  -- putStrLn "  Words:", len(solutions)
 
