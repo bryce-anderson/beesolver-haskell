@@ -3,29 +3,35 @@ module Lib
      Dictionary,
      Puzzle,
      Result,
+     resultFor,
      isPangram,
      isValid,
-     makePuzzle
+     makePuzzle,
+     solvePuzzle
     ) where
 
-import Data.Set (Set, fromList, size)
+import Data.Set (Set, elems, fromList, member, size)
 import qualified Data.Text as T
 import qualified Data.Text.Normalize as N
 import Data.Text.ICU.Char
 
 defaultDictionary = "american-english-large"
 
-data Dictionary = Dictionary
-  { name :: String
-  , words :: Set String
-  } deriving (Show)
+data Dictionary = Dictionary String (Set String)
+  deriving (Show)
 
 data Result =
-   Valid T.Text Bool |
-   Invalid T.Text 
+   Valid String Bool |
+   Invalid String
   deriving (Ord, Eq, Show)
 
 data Puzzle = Puzzle Char (Set Char)
+
+solvePuzzle :: Dictionary -> Puzzle -> [Result]
+solvePuzzle (Dictionary _ words) puzzle = (resultFor puzzle) `map` candidates
+  where
+    candidates = elems words
+  
 
 makePuzzle :: Char -> String -> Puzzle
 makePuzzle c cs =
@@ -35,8 +41,15 @@ makePuzzle c cs =
     set = fromList cs
     valid = (length cs) == (size set) && c `notElem` cs
 
-resultFor :: String -> Puzzle -> Result
-resultFor cs  p = error "boom"
+resultFor :: Puzzle -> String -> Result
+resultFor (Puzzle c req) cs =
+  if hasRequired && charsMatch then Valid cs ispan
+  else Invalid cs
+  where
+    hasRequired = elem c cs
+    charsMatch = all (\c -> member c req) cs
+    ispan = size candidateset == 7
+    candidateset = fromList cs
 
 isValid :: Result -> Bool
 isValid (Valid _ _)   = True
