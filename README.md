@@ -25,7 +25,7 @@ Common flags:
 
 ## Requirements
 
-* Haskell stack. Version 2.9.1 is what I used. The itn package may
+* [Haskell stack](https://docs.haskellstack.org/en/stable/). Version 2.9.1 is what I used. The itn package may
   be a pain in the butt and you'll probably need to to
 ```
 $ export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig"
