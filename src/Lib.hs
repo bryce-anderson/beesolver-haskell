@@ -2,7 +2,7 @@ module Lib
     (makeDict,
      Dictionary,
      Puzzle,
-     Result,
+     Result (..),
      resultFor,
      isPangram,
      isValid,
@@ -15,7 +15,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Normalize as N
 import Data.Text.ICU.Char
 
-defaultDictionary = "american-english-large"
 
 data Dictionary = Dictionary String (Set String)
   deriving (Show)
@@ -26,9 +25,10 @@ data Result =
   deriving (Ord, Eq, Show)
 
 data Puzzle = Puzzle Char (Set Char)
+  deriving (Show)
 
 solvePuzzle :: Dictionary -> Puzzle -> [Result]
-solvePuzzle (Dictionary _ words) puzzle = (resultFor puzzle) `map` candidates
+solvePuzzle (Dictionary _ words) puzzle = filter isValid $ (resultFor puzzle) `map` candidates
   where
     candidates = elems words
   
@@ -47,9 +47,8 @@ resultFor (Puzzle c req) cs =
   else Invalid cs
   where
     hasRequired = elem c cs
-    charsMatch = all (\c -> member c req) cs
-    ispan = size candidateset == 7
-    candidateset = fromList cs
+    charsMatch = all (\i -> i == c || member i req) cs
+    ispan = size (fromList cs) == 7
 
 isValid :: Result -> Bool
 isValid (Valid _ _)   = True
@@ -60,19 +59,16 @@ isPangram (Valid _ True) = True
 isPangram _ = False
 
 
-makeDict :: Maybe String -> IO Dictionary
-makeDict f = toDict <$> readFile fname
+makeDict :: String -> IO Dictionary
+makeDict fname = toDict <$> readFile fname
   where
     toDict contents = Dictionary fname (fromList $ norm $ lines contents)
-    fname = selectDict f
-    selectDict (Just f) = f
-    selectDict Nothing = defaultDictionary
 
 -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
 norm :: [String] -> [String]
 norm ws = map normalized filtered
   where
     filtered = filter ltthree $ map T.pack ws
-    normalized t = T.unpack $ T.filter (not . property Diacritic) $ N.normalize N.NFKD t
+    normalized t = T.unpack $ T.toLower $ T.filter (not . property Diacritic) $ N.normalize N.NFKD t
     ltthree s = T.length s > 3
 
