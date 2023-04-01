@@ -1,2 +1,2 @@
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = putStrLn "This is Haskell: if it compiles it ships.😉"
