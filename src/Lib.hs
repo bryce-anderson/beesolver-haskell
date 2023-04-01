@@ -3,6 +3,7 @@ module Lib
      Dictionary,
      Puzzle,
      Result (..),
+     dictSize,
      resultFor,
      isPangram,
      isValid,
@@ -19,6 +20,12 @@ import Data.Text.ICU.Char
 data Dictionary = Dictionary String (Set String)
   deriving (Show)
 
+dictWords :: Dictionary -> Set String
+dictWords (Dictionary _ ws) = ws
+
+dictSize :: Dictionary -> Int
+dictSize = size . dictWords
+
 data Result =
    Valid String Bool |
    Invalid String
@@ -28,9 +35,9 @@ data Puzzle = Puzzle Char (Set Char)
   deriving (Show)
 
 solvePuzzle :: Dictionary -> Puzzle -> [Result]
-solvePuzzle (Dictionary _ words) puzzle = filter isValid $ (resultFor puzzle) `map` candidates
+solvePuzzle dict puzzle = filter isValid $ (resultFor puzzle) `map` candidates
   where
-    candidates = elems words
+    candidates = elems $ dictWords dict
   
 
 makePuzzle :: Char -> String -> Puzzle

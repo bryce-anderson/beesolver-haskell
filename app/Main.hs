@@ -3,30 +3,27 @@
 module Main (main) where
 
 import Lib
-import Data.Maybe (fromMaybe)
 import System.Console.CmdArgs
 
-defaultDictionary = "american-english-large"
 
 data Config = Config
-  { dict :: Maybe String
+  { dict :: String
   , wordsoutput :: Bool
   , required :: String
   , others :: String
   } deriving (Show, Data, Typeable)
-
-config = Config
-  { dict = Nothing
-  , wordsoutput = def &= help "Output matching words" -- &= opt True
-  , required    = def &= typ "REQUIRED" &= argPos 0
-  , others      = def &= typ "OTHERS"   &= argPos 1
-  } &= help "Solve a Puzzle"
 
 
 getConfig :: IO Config
 getConfig = checkValid <$> cmdArgsRun mode
   where 
     mode = cmdArgsMode config
+    config = Config
+      { dict        = "american-english-large" &= help "Path to custom dictionary"
+      , wordsoutput = True &= help "Output matching words"
+      , required    = def &= typ "REQUIRED" &= argPos 0
+      , others      = def &= typ "OTHERS"   &= argPos 1
+      } &= help "Solve a Puzzle"
     checkValid m = 
       if invalid then error "args are invalid"
       else m
@@ -36,10 +33,8 @@ getConfig = checkValid <$> cmdArgsRun mode
 main :: IO ()
 main = do
   config <- getConfig
-  print config
-  let dictName = fromMaybe defaultDictionary (dict config)
-  helloMessage
-  d <- makeDict dictName
+  d <- makeDict (dict config)
+  helloMessage config d
   let puzzle = makePuzzle (head $ required config) (others config)
   let results = solvePuzzle d puzzle
   print puzzle
@@ -55,17 +50,17 @@ showResults cfg results = do
       translate (Valid word False) = word
       translate (Invalid _ ) = error "shouldn't get here"
 
-helloMessage :: IO ()
-helloMessage = do
+helloMessage :: Config -> Dictionary -> IO ()
+helloMessage config dictionary = do
   putStrLn "🐝"
   putStrLn "Hello and welcome to Spelling Bee Solver"
   putStrLn "🐝🐝"
 
   putStrLn "🐝🐝🐝"
-  -- putStrLn "Required Letter:  ", string(required)
-  -- putStrLn "Other Letters:    ", others
-  -- putStrLn "Dictionary:       ", dictionaryName
-  -- putStrLn "Dictionary words: ", len(dictionary.Words())
+  putStrLn $ "Required Letter:  " ++ (required config)
+  putStrLn $ "Other Letters:    " ++ (others config)
+  putStrLn $ "Dictionary:       " ++ (dict config)
+  putStrLn $ "Dictionary words: " ++ (show (dictSize dictionary))
   putStrLn "Solving now"
   putStrLn "🐝🐝🐝🐝"
 
